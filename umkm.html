@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMKM Kita - Pesan Langsung via WA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+        .banner-gradient { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop'); background-size: cover; background-position: center; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navigasi Atas -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+                    <div class="bg-emerald-600 p-2 rounded-lg text-white">
+                        <i data-lucide="store" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-emerald-800">UMKM Kita</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button onclick="openAiConsultant()" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded-full transition" title="Tanya AI">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </button>
+                    <button onclick="toggleCartModal()" class="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
+                        <i data-lucide="shopping-basket" class="w-7 h-7"></i>
+                        <span id="cart-badge" class="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bagian Banner (Hero Section) -->
+    <header class="relative h-[450px] flex items-center justify-center text-center text-white banner-content animate-fade">
+        <div class="absolute inset-0 banner-gradient"></div>
+        <div class="relative z-10 max-w-4xl px-4">
+            <span class="inline-block bg-emerald-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">Produk Lokal Premium</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight drop-shadow-lg">
+                Kualitas Terbaik <br> <span class="text-emerald-400">Langsung ke Tangan Anda</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
+                Dukung ekonomi lokal dengan berbelanja produk berkualitas tinggi. Pesan mudah dan cepat langsung melalui WhatsApp.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#katalog" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-full font-bold transition shadow-lg shadow-emerald-900/20">
+                    Lihat Katalog
+                </a>
+                <button onclick="openAiConsultant()" class="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/30 px-8 py-3 rounded-full font-bold transition">
+                    Tanya Asisten AI
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Daftar Produk -->
+    <main id="katalog" class="max-w-6xl mx-auto px-4 py-16">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-4">
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900">Katalog Produk</h2>
+                <div class="h-1 w-20 bg-emerald-600 mt-2 rounded-full"></div>
+            </div>
+            <p class="text-gray-500 text-sm">Menampilkan semua produk unggulan kami</p>
+        </div>
+        
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Produk akan dimuat oleh JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-16">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-6">
+                <div class="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                    <i data-lucide="store" class="w-6 h-6"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-emerald-800">UMKM Kita</span>
+            </div>
+            <p class="text-gray-500 max-w-md mx-auto mb-8">Kami berkomitmen menghadirkan produk lokal terbaik dengan kemudahan transaksi bagi setiap pelanggan.</p>
+            <div class="border-t border-gray-50 pt-8">
+                <p class="text-sm text-gray-400">&copy; 2024 UMKM Kita. Pesanan diteruskan ke WhatsApp: 081818922530</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Wadah Modals -->
+    <div id="modal-container"></div>
+
+    <script>
+        // --- KONFIGURASI ---
+        const apiKey = ""; 
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+        const waNumber = "6281818922530"; 
+        
+        let cart = [];
+        const products = [
+            { id: 1, name: "Kopi Arabika Premium", price: 45000, image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500", desc: "Biji kopi pilihan dari pegunungan tinggi dengan aroma citrus yang segar." },
+            { id: 2, name: "Kripik Singkong Pedas", price: 15000, image: "https://images.unsplash.com/photo-1621447508373-1999b2496d0b?w=500", desc: "Gurih, renyah, dan pedasnya pas. Camilan terbaik untuk menemani waktu santai." },
+            { id: 3, name: "Tas Rajut Handmade", price: 125000, image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=500", desc: "Dibuat dengan teliti oleh pengrajin lokal menggunakan bahan berkualitas tinggi." },
+            { id: 4, name: "Sambal Bawang Botolan", price: 25000, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=500", desc: "Sambal rumahan autentik tanpa pengawet, rasa bawangnya mantap." },
+            { id: 5, name: "Madu Hutan Asli", price: 85000, image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500", desc: "Madu murni dari hutan liar, baik untuk menjaga imunitas tubuh." },
+            { id: 6, name: "Gula Semut Organik", price: 30000, image: "https://images.unsplash.com/photo-1581448670546-54288090543e?w=500", desc: "Pemanis alami yang lebih sehat untuk kopi dan masakan Anda." }
+        ];
+
+        // --- RENDER PRODUK ---
+        function renderProducts() {
+            const list = document.getElementById('product-list');
+            list.innerHTML = products.map(p => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all group animate-fade">
+                    <div class="relative overflow-hidden h-56">
+                        <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="${p.name}">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">${p.name}</h3>
+                        <p class="text-sm text-gray-500 mb-6 line-clamp-2">${p.desc}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-emerald-700 font-extrabold text-xl">Rp ${p.price.toLocaleString('id-ID')}</span>
+                            <button onclick="addToCart(${p.id})" class="bg-emerald-600 text-white px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-100 transition-all active:scale-95">
+                                <i data-lucide="shopping-cart" class="w-4 h-4"></i> Beli
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- LOGIKA KERANJANG ---
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existing = cart.find(item => item.id === productId);
+            
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            
+            updateCartBadge();
+            toggleCartModal(true); 
+        }
+
+        function updateQuantity(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity < 1) {
+                    cart = cart.filter(i => i.id !== productId);
+                }
+                updateCartBadge();
+                renderCartInModal();
+            }
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+            badge.textContent = total;
+            badge.classList.toggle('hidden', total === 0);
+        }
+
+        function renderCartItems() {
+            if (cart.length === 0) {
+                return `
+                    <div class='text-center py-16 animate-fade'>
+                        <i data-lucide='shopping-cart' class='w-16 h-16 mx-auto text-gray-200 mb-4'></i>
+                        <p class='text-gray-400 text-sm'>Wah, keranjang Anda masih kosong.</p>
+                        <button onclick="toggleCartModal()" class="mt-4 text-emerald-600 font-bold text-sm">Kembali Belanja</button>
+                    </div>`;
+            }
+            
+            let total = 0;
+            const itemsHtml = cart.map(item => {
+                total += item.price * item.quantity;
+                return `
+                    <div class="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
+                        <div class="flex-1">
+                            <p class="font-bold text-sm text-gray-800">${item.name}</p>
+                            <p class="text-xs text-emerald-600 font-bold">Rp ${item.price.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="updateQuantity(${item.id}, -1)" class="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-xl hover:bg-emerald-100 transition-colors">-</button>
+                            <span class="text-sm font-bold w-4 text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, 1)" class="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-xl hover:bg-emerald-100 transition-colors">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="space-y-1 mb-6 max-h-[45vh] overflow-y-auto pr-2">${itemsHtml}</div>
+                <div class="bg-emerald-50 p-5 rounded-2xl mb-6">
+                    <div class="flex justify-between items-center font-bold">
+                        <span class="text-emerald-900">Total Pembayaran</span>
+                        <span class="text-emerald-700 text-xl">Rp ${total.toLocaleString('id-ID')}</span>
+                    </div>
+                </div>
+                <button onclick="checkoutWhatsApp()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all active:scale-95">
+                    <i data-lucide="message-circle"></i> Selesaikan Pesanan di WA
+                </button>
+                <p class="text-[10px] text-gray-400 text-center mt-4 uppercase tracking-widest font-bold">Pesanan akan dikirim ke 081818922530</p>
+            `;
+        }
+
+        function toggleCartModal(forceOpen = false) {
+            const container = document.getElementById('modal-container');
+            const existing = document.getElementById('cart-modal');
+            
+            if (existing && !forceOpen) {
+                existing.remove();
+                return;
+            }
+
+            if (!existing) {
+                container.innerHTML = `
+                    <div id="cart-modal" class="fixed inset-0 z-[100] flex items-end md:items-center justify-end p-0 md:p-6">
+                        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade" onclick="toggleCartModal()"></div>
+                        <div class="relative bg-white w-full md:w-96 h-[85vh] md:h-auto max-h-[90vh] rounded-t-[2.5rem] md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade">
+                            <div class="p-6 border-b border-gray-50 flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="shopping-basket" class="text-emerald-600"></i>
+                                    <h3 class="font-bold text-lg">Keranjang Belanja</h3>
+                                </div>
+                                <button onclick="toggleCartModal()" class="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-900 transition-colors">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div id="cart-modal-body" class="flex-1 overflow-y-auto p-6">
+                                ${renderCartItems()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                renderCartInModal();
+            }
+            lucide.createIcons();
+        }
+
+        function renderCartInModal() {
+            const body = document.getElementById('cart-modal-body');
+            if(body) {
+                body.innerHTML = renderCartItems();
+                lucide.createIcons();
+            }
+        }
+
+        function checkoutWhatsApp() {
+            if (cart.length === 0) return;
+
+            let message = `*HALO UMKM KITA - PESANAN BARU*\n`;
+            message += `--------------------------------\n\n`;
+            message += `Saya ingin memesan produk berikut:\n\n`;
+            
+            let total = 0;
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                message += `${index + 1}. *${item.name}*\n`;
+                message += `   Qty: ${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}\n`;
+                message += `   Subtotal: *Rp ${subtotal.toLocaleString('id-ID')}*\n\n`;
+                total += subtotal;
+            });
+
+            message += `--------------------------------\n`;
+            message += `💰 *TOTAL BAYAR: Rp ${total.toLocaleString('id-ID')}*\n`;
+            message += `--------------------------------\n\n`;
+            message += `Mohon info ketersediaan stok dan alamat pengiriman ya min. Terima kasih! 🙏`;
+
+            const encoded = encodeURIComponent(message);
+            window.open(`https://wa.me/${waNumber}?text=${encoded}`, '_blank');
+        }
+
+        // --- FITUR AI ---
+        async function callGemini(query, systemPrompt = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const payload = { 
+                contents: [{ parts: [{ text: query }] }], 
+                systemInstruction: { parts: [{ text: systemPrompt }] } 
+            };
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI sedang istirahat.";
+            } catch (e) { return "Koneksi AI terputus."; }
+        }
+
+        function openAiConsultant() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade" onclick="this.parentElement.remove()"></div>
+                    <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[60vh] animate-fade">
+                        <div class="p-5 bg-emerald-600 text-white font-bold flex justify-between items-center">
+                            <span class="flex items-center gap-2"><i data-lucide="sparkles"></i> Asisten Belanja Pintar</span>
+                            <button onclick="this.closest('.fixed').remove()" class="p-1 hover:bg-white/20 rounded-lg"><i data-lucide="x"></i></button>
+                        </div>
+                        <div id="ai-chat" class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-4 text-sm text-gray-800">
+                            <div class="bg-emerald-100 p-3 rounded-2xl rounded-tl-none mr-12 text-emerald-900 shadow-sm">
+                                Halo! Saya asisten belanja UMKM Kita. Ada yang bisa saya bantu pilihkan produk hari ini?
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white border-t flex gap-2">
+                            <input type="text" id="ai-in" placeholder="Tanya sesuatu..." class="flex-1 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                            <button onclick="sendAi()" class="bg-emerald-600 text-white p-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100">
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            
+            const input = document.getElementById('ai-in');
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendAi();
+            });
+        }
+
+        async function sendAi() {
+            const input = document.getElementById('ai-in');
+            const chat = document.getElementById('ai-chat');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            chat.innerHTML += `<div class="bg-white p-3 rounded-2xl rounded-tr-none ml-12 shadow-sm border border-gray-100 text-right animate-fade">${txt}</div>`;
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            const loadingId = 'ai-loading-' + Date.now();
+            chat.innerHTML += `<div id="${loadingId}" class="flex gap-1 py-2"><div class="w-2 h-2 bg-emerald-300 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-emerald-300 rounded-full animate-bounce" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-emerald-300 rounded-full animate-bounce" style="animation-delay: 0.4s"></div></div>`;
+            
+            const res = await callGemini(txt, `Kamu adalah asisten UMKM Kita. Produk kami: ${products.map(p => p.name).join(', ')}. Bantu pelanggan memilih produk dengan bahasa ramah.`);
+            
+            document.getElementById(loadingId).remove();
+            chat.innerHTML += `<div class="bg-emerald-100 p-3 rounded-2xl rounded-tl-none mr-12 text-emerald-900 shadow-sm animate-fade">${res}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        window.onload = renderProducts;
+    </script>
+</body>
+</html>
