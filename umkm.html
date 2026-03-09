@@ -140,36 +140,79 @@
         </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-emerald-900 text-white pt-16 pb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2">
-                        <div class="bg-white p-2 rounded-lg text-emerald-900">
-                            <i data-lucide="store" class="w-5 h-5"></i>
-                        </div>
-                        <span class="text-xl font-bold tracking-tight text-white">UMKM Kita</span>
+    <!-- Footer Updated Based on Provided Image -->
+    <footer class="bg-[#043d2b] text-white pt-16 pb-12">
+        <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                <!-- Info UMKM & Pemilik -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                        <span class="text-2xl font-bold tracking-tight text-white">UMKM Kita</span>
                     </div>
-                    <p class="text-emerald-100/70 text-sm leading-relaxed">
+                    <p class="text-emerald-100/70 text-sm leading-relaxed max-w-xs">
                         Kami menghadirkan produk lokal berkualitas tinggi dengan proses yang transparan.
                     </p>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">PEMILIK</p>
+                        <p class="text-sm font-bold text-white">Nama Pemilik UMKM</p>
+                    </div>
                 </div>
+
+                <!-- Link & Portofolio -->
                 <div>
-                    <h4 class="font-bold text-emerald-400 mb-6 uppercase text-xs tracking-widest">Kontak</h4>
-                    <p class="text-sm text-emerald-100/70">WhatsApp: 0818-1892-2530</p>
-                    <p class="text-sm text-emerald-100/70 mt-2">Lokasi: Kota Anda, Indonesia</p>
+                    <h4 class="font-bold text-emerald-400 mb-8 uppercase text-[11px] tracking-[0.2em]">TAUTAN CEPAT</h4>
+                    <ul class="space-y-4 text-sm font-medium text-emerald-50/80">
+                        <li><a href="#katalog" class="hover:text-emerald-400 transition-colors">Katalog Produk</a></li>
+                        <li><a href="#testimoni" class="hover:text-white transition-colors">Testimoni</a></li>
+                        <li>
+                            <a href="https://portfolio-anda.com" target="_blank" class="text-emerald-400 hover:underline">
+                                Web Portofolio
+                            </a>
+                        </li>
+                    </ul>
                 </div>
+
+                <!-- Alamat & Kontak -->
+                <div>
+                    <h4 class="font-bold text-emerald-400 mb-8 uppercase text-[11px] tracking-[0.2em]">HUBUNGI KAMI</h4>
+                    <ul class="space-y-4 text-sm font-medium text-emerald-50/80">
+                        <li class="leading-relaxed max-w-[180px]">
+                            Jl. Contoh Alamat No. 123, Kota Anda
+                        </li>
+                        <li>
+                            <a href="https://wa.me/6281818922530" target="_blank" class="hover:text-emerald-400 transition-colors">0818-1892-2530</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Social Media -->
+                <div>
+                    <h4 class="font-bold text-emerald-400 mb-8 uppercase text-[11px] tracking-[0.2em]">IKUTI KAMI</h4>
+                    <div class="flex gap-4">
+                        <a href="https://instagram.com/" target="_blank" class="w-10 h-10 border border-white/20 rounded-xl flex items-center justify-center text-white/50 hover:bg-emerald-600/30 hover:text-white transition-all">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                        </a>
+                        <a href="https://facebook.com/" target="_blank" class="w-10 h-10 border border-white/20 rounded-xl flex items-center justify-center text-white/50 hover:bg-emerald-600/30 hover:text-white transition-all">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-white/5 pt-8">
+                <p class="text-[10px] text-emerald-100/30 uppercase tracking-widest text-center md:text-left font-medium">&copy; 2024 UMKM Kita. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <div id="modal-container"></div>
 
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI PRODUK (LOKAL) ---
         const products = [
@@ -184,10 +227,13 @@
         // --- STATE APLIKASI ---
         let cart = [];
         let db = null;
+        let auth = null;
         let testimonialsCol = null;
+        let currentUser = null;
         const waNumber = "6281818922530";
         const apiKey = ""; // Gemini API
         const modelName = "gemini-2.5-flash-preview-09-2025";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'umkm-app';
 
         // --- RENDER PRODUK (DIJALANKAN SEGERA) ---
         window.renderProducts = (categoryFilter = "Semua") => {
@@ -218,37 +264,45 @@
             lucide.createIcons();
         };
 
-        // --- INITIALIZE FIREBASE (DENGAN PENGECEKAN) ---
-        try {
-            // UNTUK GITHUB: Ganti baris di bawah ini dengan config Firebase Anda sendiri
-            // const firebaseConfig = { apiKey: "...", authDomain: "...", ... };
-            const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            
-            if (configRaw) {
+        // --- INITIALIZE FIREBASE & AUTH (MANDATORY RULE 3) ---
+        const startFirebase = async () => {
+            try {
+                const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+                if (!configRaw) {
+                    document.getElementById('db-status').textContent = "Database Offline (GitHub Mode)";
+                    return;
+                }
+
                 const firebaseConfig = JSON.parse(configRaw);
                 const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
+                auth = getAuth(app);
                 db = getFirestore(app);
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'umkm-app';
+                
+                // Atur Koleksi Sesuai RULE 1
                 testimonialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'testimonials');
 
-                signInAnonymously(auth).catch(e => console.error("Auth failed:", e));
+                // Sign in FIRST and AWAIT it
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
                 onAuthStateChanged(auth, (u) => {
+                    currentUser = u;
                     if (u) {
                         document.getElementById('testi-submit-btn').disabled = false;
                         document.getElementById('db-status').textContent = "Database Terhubung ✅";
                         listenToTestimonials();
+                    } else {
+                        document.getElementById('testi-submit-btn').disabled = true;
                     }
                 });
-            } else {
-                console.warn("Konfigurasi Firebase tidak ditemukan. Berjalan dalam mode offline.");
-                document.getElementById('db-status').textContent = "Mode Offline (GitHub) - Konfigurasi belum diatur.";
-                document.getElementById('testi-submit-btn').disabled = false;
+            } catch (err) {
+                console.error("Firebase startup error:", err);
+                document.getElementById('db-status').textContent = "Gagal memuat Database.";
             }
-        } catch (err) {
-            console.error("Firebase init error:", err);
-            document.getElementById('db-status').textContent = "Gagal memuat Database.";
-        }
+        };
 
         // --- TESTIMONI HANDLERS ---
         window.handleTestimonialSubmit = async (e) => {
@@ -257,34 +311,51 @@
             const msg = document.getElementById('testi-msg').value.trim();
             if (!name || !msg) return;
 
-            if (db && testimonialsCol) {
+            // Guard Firestore operation with if (!currentUser) return; (RULE 3)
+            if (db && testimonialsCol && currentUser) {
                 try {
-                    await addDoc(testimonialsCol, { name, msg, createdAt: serverTimestamp() });
+                    await addDoc(testimonialsCol, { 
+                        name, 
+                        msg, 
+                        uid: currentUser.uid,
+                        createdAt: serverTimestamp() 
+                    });
                     document.getElementById('testi-name').value = '';
                     document.getElementById('testi-msg').value = '';
-                } catch (err) { alert("Gagal menyimpan ke cloud."); }
-            } else {
-                // Local fallback (GitHub tanpa config)
+                } catch (err) { 
+                    console.error("Save error:", err);
+                    alert("Gagal menyimpan ke cloud: " + err.message); 
+                }
+            } else if (!db) {
+                // Local fallback
                 const localTestis = JSON.parse(localStorage.getItem('temp_testis') || '[]');
                 localTestis.unshift({ name, msg, date: 'Baru saja' });
                 localStorage.setItem('temp_testis', JSON.stringify(localTestis));
-                renderLocalTestimonials(localTestis);
+                renderTestimonialsUI(localTestis);
                 document.getElementById('testi-name').value = '';
                 document.getElementById('testi-msg').value = '';
             }
         };
 
         function listenToTestimonials() {
-            onSnapshot(query(testimonialsCol), (snapshot) => {
+            if (!currentUser || !testimonialsCol) return;
+
+            // Simple query without complex filters (RULE 2)
+            onSnapshot(testimonialsCol, (snapshot) => {
                 const testis = snapshot.docs
                     .map(doc => doc.data())
-                    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    .sort((a, b) => {
+                        const timeA = a.createdAt?.seconds || 0;
+                        const timeB = b.createdAt?.seconds || 0;
+                        return timeB - timeA;
+                    });
                 renderTestimonialsUI(testis);
+            }, (error) => {
+                console.error("Firestore Snapshot Error:", error);
+                if (error.code === 'permission-denied') {
+                    document.getElementById('db-status').textContent = "Akses database ditolak (Cek aturan keamanan).";
+                }
             });
-        }
-
-        function renderLocalTestimonials(data) {
-            renderTestimonialsUI(data);
         }
 
         function renderTestimonialsUI(data) {
@@ -298,7 +369,7 @@
                 <div class="bg-white p-6 rounded-2xl border border-gray-50 shadow-sm animate-fade">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600"><i data-lucide="user" class="w-5 h-5"></i></div>
-                        <div><p class="font-bold text-sm">${t.name}</p><p class="text-[10px] text-gray-400 uppercase tracking-tighter">${t.createdAt ? new Date(t.createdAt.seconds * 1000).toLocaleDateString() : 'Guest'}</p></div>
+                        <div><p class="font-bold text-sm">${t.name}</p><p class="text-[10px] text-gray-400 uppercase tracking-tighter">${t.createdAt ? new Date(t.createdAt.seconds * 1000).toLocaleDateString('id-ID') : 'Guest'}</p></div>
                     </div>
                     <p class="text-sm text-gray-600 italic leading-relaxed">"${t.msg}"</p>
                 </div>`).join('');
@@ -383,7 +454,7 @@
                     </div>`;
                 }).join('');
                 body.innerHTML = `${items}<div class="bg-emerald-50 p-4 rounded-xl my-4 flex justify-between font-bold"><span>Total</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>
-                <button onclick="checkoutWhatsApp()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">Pesan via WA</button>`;
+                <button onclick="checkoutWhatsApp()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold">Pesan via WA</button>`;
             }
             lucide.createIcons();
         }
@@ -406,7 +477,7 @@
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="this.parentElement.remove()"></div>
                 <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[60vh]">
                     <div class="p-5 bg-emerald-600 text-white font-bold flex justify-between items-center"><span>Asisten Belanja AI ✨</span><button onclick="this.closest('.fixed').remove()"><i data-lucide="x"></i></button></div>
-                    <div id="ai-chat" class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-4 text-sm"></div>
+                    <div id="ai-chat" class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-4 text-sm text-gray-800"></div>
                     <div class="p-4 bg-white border-t flex gap-2"><input type="text" id="ai-in" placeholder="Tanya..." class="flex-1 px-4 py-2 border rounded-xl outline-none"><button onclick="sendAi()" class="bg-emerald-600 text-white p-2 rounded-xl"><i data-lucide="send"></i></button></div>
                 </div></div>`;
             lucide.createIcons();
@@ -417,7 +488,7 @@
             const chat = document.getElementById('ai-chat');
             const txt = input.value.trim();
             if (!txt) return;
-            chat.innerHTML += `<div class="bg-white p-3 rounded-2xl ml-8 shadow-sm text-right border">${txt}</div>`;
+            chat.innerHTML += `<div class="bg-white p-3 rounded-2xl ml-8 shadow-sm text-right border animate-fade">${txt}</div>`;
             input.value = '';
             chat.scrollTop = chat.scrollHeight;
             try {
@@ -427,13 +498,16 @@
                 });
                 const data = await response.json();
                 const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, fitur AI membutuhkan API Key.";
-                chat.innerHTML += `<div class="bg-emerald-100 p-3 rounded-2xl mr-8 text-emerald-900">${reply}</div>`;
+                chat.innerHTML += `<div class="bg-emerald-100 p-3 rounded-2xl mr-8 text-emerald-900 shadow-sm animate-fade">${reply}</div>`;
             } catch(e) { chat.innerHTML += `<div class="bg-red-50 p-2 text-xs text-red-500">Gagal menghubungi AI.</div>`; }
             chat.scrollTop = chat.scrollHeight;
         };
 
         // --- START ---
-        window.renderProducts();
+        window.onload = async () => {
+            window.renderProducts();
+            await startFirebase();
+        };
     </script>
 </body>
 </html>
